@@ -50,9 +50,7 @@ const LandingPage = ({ onLogin }: { onLogin: (u: User) => void }) => {
         {step === 'welcome' && (
           <div className="text-center">
             <div className="w-20 h-20 bg-white rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-teal-600" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M7 2a1 1 0 00-.707 1.707L7 4.414v3.758a1 1 0 01-.293.707l-4 4C.817 14.761 2.165 18 5.757 18h8.486c3.592 0 4.94-3.239 3.05-5.121l-4-4A1 1 0 0113 8.172V4.414l.707-.707A1 1 0 0013 2H7zm2 6.172V4h2v4.172a3 3 0 00.879 2.12l1.027 1.028a4 4 0 00-2.171.102l-.47.156a4 4 0 01-2.53 0l-.563-.187a4 4 0 00-2.329.313l.83-8.032a3 3 0 00.879-2.12z" clipRule="evenodd" />
-              </svg>
+              <img src="icon.svg" className="w-12 h-12" alt="Logo" />
             </div>
             <h1 className="text-4xl font-bold mb-2">BioChat</h1>
             <p className="text-teal-100 mb-8">The anonymous social network exclusively for the medical community.</p>
@@ -464,8 +462,27 @@ const App: React.FC = () => {
   const [page, setPage] = useState('home');
   const [users, setUsers] = useState<User[]>(INITIAL_USERS);
   const [posts, setPosts] = useState<Post[]>(INITIAL_POSTS);
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
 
-  // Load user from session logic (skipped for simple demo, pure state)
+  useEffect(() => {
+    const handler = (e: any) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstallClick = () => {
+    if (installPrompt) {
+      installPrompt.prompt();
+      installPrompt.userChoice.then((choiceResult: any) => {
+        if (choiceResult.outcome === 'accepted') {
+          setInstallPrompt(null);
+        }
+      });
+    }
+  };
 
   const handleBanToggle = (id: string) => {
     setUsers(prev => prev.map(u => 
@@ -508,7 +525,9 @@ const App: React.FC = () => {
         setPage={setPage} 
         userRole={user.role} 
         isLoggedIn={!!user} 
-        logout={() => setUser(null)} 
+        logout={() => setUser(null)}
+        onInstall={handleInstallClick}
+        canInstall={!!installPrompt}
       />
       
       <main className="md:ml-64 min-h-screen relative">
